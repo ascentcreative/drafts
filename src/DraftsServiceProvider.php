@@ -19,9 +19,7 @@ class DraftsServiceProvider extends ServiceProvider
     
         $this->mergeConfigFrom(
             __DIR__.'/../config/drafts.php', 'drafts'
-        );
-
-       
+        );    
 
     }
 
@@ -34,14 +32,14 @@ class DraftsServiceProvider extends ServiceProvider
 
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
-       
-
     }
 
 
     // register the components
     public function bootComponents() {
       
+        Blade::component('drafts-savedraftbutton', 'AscentCreative\Drafts\Components\SaveDraftButton');
+
     }
 
 

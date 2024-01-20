@@ -2,7 +2,8 @@
 
 namespace AscentCreative\Drafts\Traits;
 
-use AscentCreative\Approval\Models\Draft;
+use AscentCreative\Drafts\Models\Draft;
+use Illuminate\Database\Eloquent\Model;
 
 use Illuminate\Http\Request;
 
@@ -12,8 +13,61 @@ use Illuminate\Http\Request;
  */
 trait Draftable {
 
+    // get all the drafts for a model
     public function drafts() {
         return $this->morphMany(Draft::class, 'draftable');
+    }
+
+    // get the drafts for the model for the user
+    public function userDrafts(\App\Models\User $user=null) {
+        if(!$user) {
+            $user = auth()->user();
+        }
+        return $this->drafts()
+                ->where('author_id', $user->id);
+    }
+
+    // saves a new draft of a model (i.e. no existing instance)
+    static function saveNewDraft($data) {
+
+        // write the incoming model data as a draft
+        $cls = __CLASS__;
+        $inst = new $cls();
+        // use fill() ... attributes to strip out extraneous data (like if a request()->all() was provided as the data)
+        $inst->fill($data); 
+        $payload = $inst->attributes;
+    
+        // - the approvals module also stores a stub Model record when new items are created. Should we do that here?
+        //  Or can drafts be saved totally independently?
+        //  Try the latter first and see where we get to!
+        Draft::create([
+            'draftable_type' => $cls,
+            'draftable_id' => null,
+            'author_id' => auth()->user()->id,
+            'payload' => $payload,
+        ]);
+
+    }
+
+    // Saves a draft edit on an existing model record.
+    public function saveAsDraft($data) {
+
+        $this->fill($data);
+
+        //  @TODO- when storing a draft edit, use similar code to approvall module to detect changes
+        //  - only store the changes
+        $payload = $this->attributes;
+
+        // dd($payload);
+
+        Draft::updateOrCreate([
+            'draftable_type' => get_class($this),
+            'draftable_id' => $this->id,
+        ], [
+            'author_id' => auth()->user()->id,
+            'payload' => $payload,
+        ]);
+
     }
 
 }

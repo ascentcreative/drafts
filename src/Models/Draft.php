@@ -1,6 +1,6 @@
 <?php
 
-namespace AscentCreative\Draft\Models;
+namespace AscentCreative\Drafts\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -50,6 +50,15 @@ class Draft extends Model {
 
     public function draftable() {
         return $this->morphTo(); //->withUnapproved();
+    }
+
+
+    // turns the draft back into the relevant model
+    // - Should remove the draft once converted as no longer needed. Maybe just archive it? Soft Delete?
+    // - If draft was an edit, maybe we need to check for clashes on fields 
+    //      (or at least check draft is newer than the model we're overwriting?)
+    public function commitDraft() {
+
     }
 
    
