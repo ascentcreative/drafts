@@ -28,7 +28,11 @@ trait Draftable {
     }
 
     // saves a new draft of a model (i.e. no existing instance)
-    static function saveNewDraft($data) {
+    static function saveNewDraft($data, $owner=null) {
+
+        if(!$owner) {
+            $owner = auth()->user();
+        }
 
         // write the incoming model data as a draft
         $cls = __CLASS__;
@@ -43,14 +47,19 @@ trait Draftable {
         Draft::create([
             'draftable_type' => $cls,
             'draftable_id' => null,
-            'author_id' => auth()->user()->id,
+            'owner_type' => get_class($owner),
+            'owner_id' => $owner->id,
             'payload' => $payload,
         ]);
 
     }
 
     // Saves a draft edit on an existing model record.
-    public function saveAsDraft($data) {
+    public function saveAsDraft($data, $owner=null) {
+
+        if(!$owner) {
+            $owner = auth()->user();
+        }
 
         $this->fill($data);
 
@@ -64,7 +73,8 @@ trait Draftable {
             'draftable_type' => get_class($this),
             'draftable_id' => $this->id,
         ], [
-            'author_id' => auth()->user()->id,
+            'owner_type' => get_class($owner),
+            'owner_id' => $owner->id,
             'payload' => $payload,
         ]);
 

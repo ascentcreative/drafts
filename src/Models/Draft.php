@@ -16,7 +16,7 @@ class Draft extends Model {
 
     public $table = "drafts";
 
-    public $fillable = ['draftable_type', 'draftable_id', 'author_id', 'payload'];
+    public $fillable = ['draftable_type', 'draftable_id', 'owner_type', 'owner_id', 'payload'];
 
     public $casts = [
         'payload' => 'array',
@@ -33,9 +33,9 @@ class Draft extends Model {
             return $this->payload[$key];
         }
 
-        if($val = $this->draftable->$key) {
-            return $val;
-        }
+        // if($this->draftable->$key) {
+        //     return $val;
+        // }
 
     }
 
@@ -44,13 +44,37 @@ class Draft extends Model {
     }
 
 
-    public function author() {
-        return $this->belongsTo(\App\Models\User::class, 'author_id');
+    public function owner() {
+        return $this->morphTo();
     }
 
     public function draftable() {
         return $this->morphTo(); //->withUnapproved();
     }
+
+
+    public function scopeByOwner($q, $owner) {
+        $q->where('owner_type', get_class($owner))
+                ->where('owner_id', $owner->id);
+    }
+
+
+    public function updateDraft($data) {
+
+        if($parent = $this->draftable) {
+            $parent->fill($data);
+            $this->payload = $parent->attributes;
+            $this->save();
+        } else {
+            $cls = $this->draftable_type;
+            $instance = new $cls();
+            $instance->fill($data);
+            $this->payload = $instance->attributes;
+            $this->save();
+        }
+
+    }
+
 
 
     // turns the draft back into the relevant model
