@@ -77,4 +77,32 @@ trait Draftable {
 
     }
 
+
+    // delete the drafts stored for a model:
+    public function clearDrafts() {
+        $this->drafts()->delete();
+    }
+
+
+
+    private function resolveDraftOwner() {
+
+         // resolve the owner from the model
+         $owner_relation = $this->owner_relation ?? 'owner';
+         $owner = $this->$owner_relation;
+         
+         if(is_null($owner)) {
+             // should we just fall back to the user?
+             $owner = auth()->user();            
+         }
+ 
+         if(is_null($owner)) {
+             // still null? bomb out.
+             throw new Exception('Unable to resolve an owner for the draft');
+         }
+
+         return $owner;
+
+    }
+
 }
