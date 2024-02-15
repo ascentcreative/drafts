@@ -28,11 +28,7 @@ trait Draftable {
     }
 
     // saves a new draft of a model (i.e. no existing instance)
-    static function saveNewDraft($data, $owner=null) {
-
-        if(!$owner) {
-            $owner = auth()->user();
-        }
+    static function saveNewDraft($data) {
 
         // write the incoming model data as a draft
         $cls = __CLASS__;
@@ -40,7 +36,9 @@ trait Draftable {
         // use fill() ... attributes to strip out extraneous data (like if a request()->all() was provided as the data)
         $inst->fill($data); 
         $payload = $inst->attributes;
-    
+
+        $owner = $inst->resolveDraftOwner();
+
         // - the approvals module also stores a stub Model record when new items are created. Should we do that here?
         //  Or can drafts be saved totally independently?
         //  Try the latter first and see where we get to!
@@ -55,17 +53,16 @@ trait Draftable {
     }
 
     // Saves a draft edit on an existing model record.
-    public function saveAsDraft($data, $owner=null) {
-
-        if(!$owner) {
-            $owner = auth()->user();
-        }
+    public function saveAsDraft($data) {
 
         $this->fill($data);
 
         //  @TODO- when storing a draft edit, use similar code to approvall module to detect changes
         //  - only store the changes
         $payload = $this->attributes;
+
+        // resolve the owner:
+        $owner = $this->resolveDraftOwner();
 
         // dd($payload);
 
